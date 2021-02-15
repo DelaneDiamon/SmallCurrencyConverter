@@ -2,15 +2,23 @@
   <div class="row q-pa-sm items-center">
     <q-card class="main-container">
       <q-card-section class="row justify-around q-pa-xs main-container-header">
-        <q-item v-ripple clickable tag="label" :class="['text-h6', 'q-pa-sm', 'text-white', {'text-underline': true}]">RATES</q-item>
+        <q-item v-ripple class="text-h6 q-pa-sm text-white" clickable tag="label" @click="ratesClickHandler">RATES
+        </q-item>
         <div class="main-container-header-separator bg-white self-center"></div>
-        <q-item v-ripple clickable class="text-h6 q-pa-sm text-white">CHARTS</q-item>
+        <q-item v-ripple class="text-h6 q-pa-sm text-white" clickable @click="chartsClickHandler">CHARTS</q-item>
       </q-card-section>
-      <q-card-section class="q-px-sm">
-        <q-input input-class="text-grey-7" mask="#.##" reverse-fill-mask suffix="EUR" outlined dense style="border-radius: 3px"></q-input>
+      <q-card-section class="q-px-sm q-py-sm">
+        <q-input v-model="baseCurrencyAmount" class="q-py-none" clearable debounce="200"
+                 dense hide-bottom-space input-class="text-right text-grey-6 base-currency-input" mask="#.##" outlined
+                 placeholder="0.00" reverse-fill-mask style="border-radius: 3px" suffix="EUR"></q-input>
       </q-card-section>
-      <latest-currency-rates-list v-if="true" :latest-currency-rates="latestCurrencyRates"></latest-currency-rates-list>
-      <q-inner-loading color="blue-7" :showing="loading"></q-inner-loading>
+      <latest-currency-rates-list v-if="currentTab === CURRENCY_CONVERTER_LATEST_RATES"
+                                  :base-currency-amount="baseCurrencyAmount"
+                                  :latest-currency-rates="latestCurrencyRates"></latest-currency-rates-list>
+      <historical-currency-rates v-else-if="currentTab === CURRENCY_CONVERTER_HISTORICAL_RATES"
+                                 :historical-currency-rates-data="historicalCurrencyRates"
+                                 @HISTORICAL_CURRENCY_RATES_PERIOD_CHANGED="updateHistoricalCurrencyRates"></historical-currency-rates>
+      <q-inner-loading :showing="loading" color="blue-7"></q-inner-loading>
     </q-card>
 
   </div>
@@ -18,62 +26,102 @@
 </template>
 
 <script>
-    import LatestCurrencyRatesList from "components/LatestCurrencyRatesList";
-    import {
-      CURRENCY_CONVERTER_HISTORICAL_RATES,
-      CURRENCY_CONVERTER_LATEST_RATES
-    } from "src/constants/currencyConverterTabs";
-    import {UPDATE_LATEST_CURRENCY_EXCHANGE_RATES} from "src/constants/currencyConverterActions";
-    import {GET_LATEST_CURRENCY_CONVERTER_RATES} from "src/constants/currencyConverterGetters";
-    export default {
-        name: "SmallCurrencyConverter",
-      components: {LatestCurrencyRatesList},
-      data() {
-        return {
-          currentTab: CURRENCY_CONVERTER_LATEST_RATES,
-          loading: false
-        }
+  import LatestCurrencyRatesList from "components/LatestCurrencyRatesList";
+  import {
+    CURRENCY_CONVERTER_HISTORICAL_RATES,
+    CURRENCY_CONVERTER_LATEST_RATES
+  } from "src/constants/currencyConverterTabs";
+  import {
+    UPDATE_HISTORICAL_CURRENCY_RATES,
+    UPDATE_LATEST_CURRENCY_EXCHANGE_RATES
+  } from "src/constants/currencyConverterActions";
+  import {
+    GET_CURRENCY_CONVERTER_HISTORICAL_RATES,
+    GET_CURRENCY_CONVERTER_LATEST_RATES
+  } from "src/constants/currencyConverterGetters";
+  import HistoricalCurrencyRates from "components/HistoricalCurrencyRates";
+
+  export default {
+    name: "SmallCurrencyConverter",
+    components: {HistoricalCurrencyRates, LatestCurrencyRatesList},
+    data() {
+      return {
+        CURRENCY_CONVERTER_LATEST_RATES,
+        CURRENCY_CONVERTER_HISTORICAL_RATES,
+        currentTab: CURRENCY_CONVERTER_LATEST_RATES,
+        baseCurrencyAmount: void 0,
+        loading: false
+      }
+    },
+    computed: {
+      latestCurrencyRates() {
+        return this.$store.getters[GET_CURRENCY_CONVERTER_LATEST_RATES];
       },
-      computed: {
-        latestCurrencyRates(){
-          return this.$store.getters[GET_LATEST_CURRENCY_CONVERTER_RATES];
+      historicalCurrencyRates() {
+        return this.$store.getters[GET_CURRENCY_CONVERTER_HISTORICAL_RATES];
+      }
+    },
+    async mounted() {
+      try {
+        this.loading = true;
+        if (this.currentTab === CURRENCY_CONVERTER_LATEST_RATES) {
+          await this.$store.dispatch(UPDATE_LATEST_CURRENCY_EXCHANGE_RATES)
         }
+      } catch (error) {
+        console.log(error)
+      } finally {
+        this.loading = false;
+      }
+    },
+    methods: {
+      async ratesClickHandler() {
+        this.currentTab = CURRENCY_CONVERTER_LATEST_RATES
+        this.loading = true
+        await this.$store.dispatch(UPDATE_LATEST_CURRENCY_EXCHANGE_RATES)
+        this.loading = false
       },
-      async mounted(){
-          try {
-            this.loading = true;
-            if (this.currentTab === CURRENCY_CONVERTER_LATEST_RATES){
-              await this.$store.dispatch(UPDATE_LATEST_CURRENCY_EXCHANGE_RATES)
-            }
-            else if (this.currentTab === CURRENCY_CONVERTER_HISTORICAL_RATES){
-              console.log()
-            }
-          }
-          catch(error){
-            console.log(error)
-          }
-          finally{
-            this.loading = false;
-          }
+      async chartsClickHandler() {
+        this.currentTab = CURRENCY_CONVERTER_HISTORICAL_RATES
+        this.loading = true
+        await this.$store.dispatch(UPDATE_LATEST_CURRENCY_EXCHANGE_RATES)
+        this.loading = false
+      },
+      updateHistoricalCurrencyRates(value) {
+        this.$store.dispatch(UPDATE_HISTORICAL_CURRENCY_RATES, value)
       }
     }
+  }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 
-  .main-container{
+  .main-container {
     max-width: 300px;
     width: 100%;
   }
 
-  .main-container-header{
-    background: linear-gradient(90deg, #1590F4 10%, #075088);
+  .main-container-header {
+    background: linear-gradient(to right, #1590F4, #075088);
   }
 
-  .main-container-header-separator{
+  .main-container-header-separator {
     width: 0.12em;
     height: 17px;
   }
 
+  .q-field--outlined .q-field__control{
+    border-radius: 8px;
+  }
+
+  .base-currency-input{
+    height:auto;
+    width:58.3%
+  }
+
+  .q-field__suffix{
+    height:auto;
+    width: 50%;
+    color: $grey-6
+  }
 
 </style>
