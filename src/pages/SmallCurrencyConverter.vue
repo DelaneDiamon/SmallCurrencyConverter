@@ -1,5 +1,5 @@
 <template>
-  <div class="row q-pa-sm items-center">
+  <div class="row items-center">
     <q-card class="main-container">
       <q-card-section class="row justify-around q-pa-xs main-container-header">
         <q-item v-ripple class="text-h6 q-pa-sm text-white" clickable tag="label" @click="ratesClickHandler">RATES
@@ -96,7 +96,7 @@
 <style lang="scss">
 
   .main-container {
-    max-width: 300px;
+    max-width: 500px;
     width: 100%;
   }
 

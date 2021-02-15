@@ -1,5 +1,5 @@
 <template>
-  <div class="column justify-center">
+  <div class="column justify-center rates-container">
     <div class="row justify-center q-gutter-sm q-pb-sm">
       <div class="column items-center justify-center pair-currency-selection-label">TO</div>
       <q-select :value="currencyPairName"
@@ -38,7 +38,7 @@
         </q-chip>
       </div>
     </div>
-    <div class="chart-container q-px-sm q-pb-sm bg-info">
+    <div class="q-px-sm q-pb-sm bg-info">
       <time-series-apex-charts class="bg-white bg-info q-pa-none historical-rates-container"
                                :chart-data="historicalCurrencyRatesData.chartData"
                                :chart-options="historicalCurrencyRatesData.chartOptions"></time-series-apex-charts>
@@ -132,16 +132,11 @@
     color: #7F7F7F
   }
 
-  .chart-container {
-    width: 100%;
-  }
-
   .historical-rates-container {
     border-radius: 8px;
   }
 
-  .q-field__native{
+  .q-field__native {
     color: $primary
   }
-
 </style>

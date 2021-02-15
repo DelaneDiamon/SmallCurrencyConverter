@@ -31,7 +31,7 @@
 </script>
 <style lang="scss">
     .rates-container{
-      max-height: 500px;
+      max-height: 900px;
       height: 100%;
     }
 </style>
